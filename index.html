@@ -100,6 +100,11 @@ button{
   font-size:46px;
 }
 .cookie:active, .mint:active, .gold:active{ transform: scale(0.9); }
+.cookie.touch-down, .mint.touch-down, .gold.touch-down{ 
+  transform: scale(0.85); 
+  filter: brightness(1.2);
+  transition: all 0.1s ease;
+}
 .cookie.spawn, .mint.spawn, .gold.spawn{
   animation:pop .25s ease;
 }
@@ -475,7 +480,14 @@ function spawnCookie(){
   el.className = 'cookie spawn';
   el.textContent = '🍪';
   placeElementRandom(el);
+  
+  // 터치 다운과 클릭 이벤트 모두 추가
+  el.addEventListener('touchstart', e=>{
+    e.preventDefault();
+    onCookieClick(e,1);
+  });
   el.addEventListener('click', e=>onCookieClick(e,1));
+  
   playground.appendChild(el);
   setTimeout(()=>{ if(el.parentNode) el.remove(); }, 1800);
 }
@@ -486,7 +498,14 @@ function spawnMint(){
     el.className = 'mint spawn';
     el.textContent = '🍫';
     placeElementRandom(el);
+    
+    // 터치 다운과 클릭 이벤트 모두 추가
+    el.addEventListener('touchstart', e=>{
+      e.preventDefault();
+      onCookieClick(e,5);
+    });
     el.addEventListener('click', e=>onCookieClick(e,5));
+    
     playground.appendChild(el);
     setTimeout(()=>{ if(el.parentNode) el.remove(); }, 2500);
   }
@@ -498,7 +517,14 @@ function spawnGold(){
     el.className = 'gold spawn';
     el.textContent = '✨';
     placeElementRandom(el);
+    
+    // 터치 다운과 클릭 이벤트 모두 추가
+    el.addEventListener('touchstart', e=>{
+      e.preventDefault();
+      onGoldClick(e);
+    });
     el.addEventListener('click', e=>onGoldClick(e));
+    
     playground.appendChild(el);
     setTimeout(()=>{ if(el.parentNode) el.remove(); }, 3500);
   }
