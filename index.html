@@ -152,18 +152,20 @@ button{
 .firework-particle:nth-child(7) { background: #ff6f91; animation-delay: 0.6s; }
 .firework-particle:nth-child(8) { background: #32c48d; animation-delay: 0.7s; }
 
-.hud{
+.goal-text{
   position:absolute;
-  left:12px;top:12px;
-  background:rgba(255,255,255,0.85);
-  padding:8px 12px;border-radius:8px;
-  box-shadow:0 6px 18px rgba(0,0,0,0.06);
+  top:12px;
+  left:50%;
+  transform:translateX(-50%);
+  background:rgba(255,255,255,0.9);
+  padding:10px 16px;
+  border-radius:10px;
+  box-shadow:0 6px 18px rgba(0,0,0,0.08);
   font-weight:700;
-}
-.message{
-  position:absolute;right:12px;top:12px;
-  background:rgba(0,0,0,0.06);
-  padding:8px 12px;border-radius:8px;font-weight:600;
+  font-size:14px;
+  text-align:center;
+  line-height:1.4;
+  z-index:10;
 }
 .footer{
   padding:12px 20px;
@@ -179,6 +181,46 @@ button{
   display:none;
 }
 .flash.show{display:block}
+
+/* WOW! 이펙트 스타일 */
+.wow-effect {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 48px;
+  font-weight: 900;
+  color: transparent;
+  background: linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
+  background-size: 400% 400%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: rainbow 0.8s ease-in-out, wowBounce 0.8s ease-in-out;
+  pointer-events: none;
+  z-index: 1000;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+}
+
+@keyframes rainbow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes wowBounce {
+  0% { 
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 0;
+  }
+  50% { 
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 1;
+  }
+  100% { 
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0;
+  }
+}
 
 /* 반응형 디자인 */
 @media (max-width: 768px) {
@@ -251,14 +293,9 @@ button{
     font-size: 40px;
   }
   
-  .hud {
+  .goal-text {
     font-size: 12px;
-    padding: 6px 10px;
-  }
-  
-  .message {
-    font-size: 11px;
-    padding: 6px 10px;
+    padding: 8px 12px;
   }
   
   .footer {
@@ -321,14 +358,9 @@ button{
     font-size: 30px;
   }
   
-  .hud {
+  .goal-text {
     font-size: 11px;
-    padding: 4px 8px;
-  }
-  
-  .message {
-    font-size: 10px;
-    padding: 4px 8px;
+    padding: 6px 10px;
   }
   
   .footer {
@@ -359,8 +391,7 @@ button{
 
 <div class="game-area">
   <div class="playground" id="playground">
-    <div class="hud">목표: 제한시간 내 가능한 많은 쿠키 클릭!</div>
-    <div class="message small" id="message">민트초코+5점 / 황금쿠키+10점+3초!</div>
+    <div class="goal-text">목표: 제한시간 내 가능한 많은 쿠키 클릭!<br>민트초코+5점 / 황금쿠키+10점+3초!</div>
     <div class="flash" id="flash">콤보! +<span id="flashAmount">1</span></div>
   </div>
 </div>
@@ -481,6 +512,22 @@ function createFirework(x, y) {
   }, 1000);
 }
 
+// WOW! 이펙트 함수
+function createWowEffect() {
+  const wow = document.createElement('div');
+  wow.className = 'wow-effect';
+  wow.textContent = 'WOW!';
+  
+  playground.appendChild(wow);
+  
+  // 애니메이션 완료 후 제거
+  setTimeout(() => {
+    if (wow.parentNode) {
+      wow.remove();
+    }
+  }, 800);
+}
+
 function rand(min,max){ return Math.random()*(max-min)+min; }
 
 function spawnCookie(){
@@ -593,6 +640,11 @@ function onCookieClick(e,pts){
   const fireworkY = rect.top - playgroundRect.top + rect.height / 2;
   createFirework(fireworkX, fireworkY);
   
+  // WOW! 이펙트 생성 (더블터치 또는 민트초코 성공 시)
+  if (isDoubleTap || pts === 5) {
+    createWowEffect();
+  }
+  
   // 점수 표시 (더블 터치 시 특별 표시)
   if (isDoubleTap) {
     flashAmount.textContent = totalPts + ' (더블!)';
@@ -642,6 +694,11 @@ function onGoldClick(e){
   const fireworkX = rect.left - playgroundRect.left + rect.width / 2;
   const fireworkY = rect.top - playgroundRect.top + rect.height / 2;
   createFirework(fireworkX, fireworkY);
+  
+  // WOW! 이펙트 생성 (더블터치 또는 황금쿠키 성공 시)
+  if (isDoubleTap || true) { // 황금쿠키는 항상 WOW! 이펙트
+    createWowEffect();
+  }
   
   // 점수 표시 (더블 터치 시 특별 표시)
   if (isDoubleTap) {
