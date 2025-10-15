@@ -109,6 +109,44 @@ button{
 @keyframes spin{ from{transform:rotate(0)} to{transform:rotate(360deg)} }
 @keyframes blink{ from{opacity:0.7} to{opacity:1} }
 
+/* 폭죽 이펙트 */
+.firework {
+  position: absolute;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.firework-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  animation: firework-explode 0.8s ease-out forwards;
+}
+
+@keyframes firework-explode {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+.firework-particle:nth-child(1) { background: #ff6f91; animation-delay: 0s; }
+.firework-particle:nth-child(2) { background: #32c48d; animation-delay: 0.1s; }
+.firework-particle:nth-child(3) { background: #ffd700; animation-delay: 0.2s; }
+.firework-particle:nth-child(4) { background: #ff6f91; animation-delay: 0.3s; }
+.firework-particle:nth-child(5) { background: #32c48d; animation-delay: 0.4s; }
+.firework-particle:nth-child(6) { background: #ffd700; animation-delay: 0.5s; }
+.firework-particle:nth-child(7) { background: #ff6f91; animation-delay: 0.6s; }
+.firework-particle:nth-child(8) { background: #32c48d; animation-delay: 0.7s; }
+
 .hud{
   position:absolute;
   left:12px;top:12px;
@@ -293,7 +331,7 @@ button{
     <div class="logo">🍪</div>
     <div>
       <div>딸기-민트초코 쿠키 클릭게임 v2</div>
-      <div style="font-size:12px;color:#666;margin-top:4px">콤보+보너스 쿠키+효과음까지!</div>
+      <div style="font-size:12px;color:#666;margin-top:4px">콤보+보너스 쿠키+효과음+폭죽+더블터치!</div>
     </div>
   </div>
   <div class="controls">
@@ -315,7 +353,7 @@ button{
 </div>
 
 <div class="footer">
-  <div>설명: 🍪 +1 / 🍫 +5 / ✨황금 +10 +3초 / 콤보점수 ↑</div>
+  <div>설명: 🍪 +1 / 🍫 +5 / ✨황금 +10 +3초 / 콤보점수 ↑ / 더블터치 2배!</div>
   <div class="small">파일로 저장 후 브라우저에서 열어 플레이하세요.</div>
 </div>
 </div>
@@ -342,6 +380,11 @@ let running = false;
 
 let combo = 0;
 let lastClickTime = 0;
+
+// 더블 터치 감지를 위한 변수들
+let lastClickElement = null;
+let lastClickTimestamp = 0;
+const DOUBLE_TAP_THRESHOLD = 300; // 300ms 내 더블 터치
 
 const BEST_KEY = 'cookie_click_best_v2';
 bestEl.textContent = localStorage.getItem(BEST_KEY) || 0;
@@ -389,6 +432,40 @@ function playClickSound(type = 'normal') {
   
   oscillator.start(audioContext.currentTime);
   oscillator.stop(audioContext.currentTime + 0.2);
+}
+
+// 폭죽 이펙트 함수
+function createFirework(x, y) {
+  const firework = document.createElement('div');
+  firework.className = 'firework';
+  firework.style.left = x + 'px';
+  firework.style.top = y + 'px';
+  
+  // 8개의 파티클 생성
+  for (let i = 0; i < 8; i++) {
+    const particle = document.createElement('div');
+    particle.className = 'firework-particle';
+    
+    // 각 파티클을 원형으로 배치
+    const angle = (i * 45) * (Math.PI / 180);
+    const distance = 30 + Math.random() * 20;
+    const particleX = Math.cos(angle) * distance;
+    const particleY = Math.sin(angle) * distance;
+    
+    particle.style.left = particleX + 'px';
+    particle.style.top = particleY + 'px';
+    
+    firework.appendChild(particle);
+  }
+  
+  playground.appendChild(firework);
+  
+  // 애니메이션 완료 후 제거
+  setTimeout(() => {
+    if (firework.parentNode) {
+      firework.remove();
+    }
+  }, 1000);
 }
 
 function rand(min,max){ return Math.random()*(max-min)+min; }
@@ -454,12 +531,40 @@ function placeElementRandom(el){
 
 function onCookieClick(e,pts){
   if(!running) return;
+  
   const now = Date.now();
+  const currentElement = e.currentTarget;
+  
+  // 더블 터치 감지
+  let isDoubleTap = false;
+  if (lastClickElement === currentElement && 
+      now - lastClickTimestamp < DOUBLE_TAP_THRESHOLD) {
+    isDoubleTap = true;
+  }
+  
+  // 콤보 계산
   combo = (now - lastClickTime < 1000) ? combo+1 : 0;
   lastClickTime = now;
-
-  let totalPts = pts + Math.floor(combo/3);
+  
+  // 점수 계산 (더블 터치 시 2배)
+  let basePts = pts + Math.floor(combo/3);
+  let totalPts = isDoubleTap ? basePts * 2 : basePts;
+  
   score += totalPts;
+  
+  // 폭죽 이펙트 생성
+  const rect = currentElement.getBoundingClientRect();
+  const playgroundRect = playground.getBoundingClientRect();
+  const fireworkX = rect.left - playgroundRect.left + rect.width / 2;
+  const fireworkY = rect.top - playgroundRect.top + rect.height / 2;
+  createFirework(fireworkX, fireworkY);
+  
+  // 점수 표시 (더블 터치 시 특별 표시)
+  if (isDoubleTap) {
+    flashAmount.textContent = totalPts + ' (더블!)';
+  } else {
+    flashAmount.textContent = totalPts;
+  }
   flashScore(totalPts);
   updateScore();
   
@@ -470,18 +575,55 @@ function onCookieClick(e,pts){
     playClickSound('normal'); // 일반 쿠키
   }
   
+  // 더블 터치 정보 업데이트
+  lastClickElement = currentElement;
+  lastClickTimestamp = now;
+  
   e.currentTarget.remove();
 }
 
 function onGoldClick(e){
   if(!running) return;
-  score += 10;
+  
+  const now = Date.now();
+  const currentElement = e.currentTarget;
+  
+  // 더블 터치 감지
+  let isDoubleTap = false;
+  if (lastClickElement === currentElement && 
+      now - lastClickTimestamp < DOUBLE_TAP_THRESHOLD) {
+    isDoubleTap = true;
+  }
+  
+  // 점수 계산 (더블 터치 시 2배)
+  let basePts = 10;
+  let totalPts = isDoubleTap ? basePts * 2 : basePts;
+  
+  score += totalPts;
   timeLeft += 3;
-  flashScore(10);
+  
+  // 폭죽 이펙트 생성
+  const rect = currentElement.getBoundingClientRect();
+  const playgroundRect = playground.getBoundingClientRect();
+  const fireworkX = rect.left - playgroundRect.left + rect.width / 2;
+  const fireworkY = rect.top - playgroundRect.top + rect.height / 2;
+  createFirework(fireworkX, fireworkY);
+  
+  // 점수 표시 (더블 터치 시 특별 표시)
+  if (isDoubleTap) {
+    flashAmount.textContent = totalPts + ' (더블!)';
+  } else {
+    flashAmount.textContent = totalPts;
+  }
+  flashScore(totalPts);
   updateScore();
   
   // 황금 쿠키 사운드 재생
   playClickSound('gold');
+  
+  // 더블 터치 정보 업데이트
+  lastClickElement = currentElement;
+  lastClickTimestamp = now;
   
   e.currentTarget.remove();
 }
@@ -513,6 +655,11 @@ function startGame(){
   score = 0;
   timeLeft = 30;
   combo = 0;
+  
+  // 더블 터치 정보 초기화
+  lastClickElement = null;
+  lastClickTimestamp = 0;
+  
   scoreEl.textContent = score;
   timerEl.textContent = timeLeft;
   startBtn.textContent = '플레이 중...';
