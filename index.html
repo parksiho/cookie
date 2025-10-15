@@ -153,19 +153,15 @@ button{
 .firework-particle:nth-child(8) { background: #32c48d; animation-delay: 0.7s; }
 
 .goal-text{
-  position:absolute;
-  top:12px;
-  left:50%;
-  transform:translateX(-50%);
   background:rgba(255,255,255,0.9);
-  padding:10px 16px;
+  padding:12px 20px;
+  margin:0 20px 15px 20px;
   border-radius:10px;
   box-shadow:0 6px 18px rgba(0,0,0,0.08);
   font-weight:700;
   font-size:14px;
   text-align:center;
   line-height:1.4;
-  z-index:10;
 }
 .footer{
   padding:12px 20px;
@@ -389,9 +385,10 @@ button{
   </div>
 </header>
 
+<div class="goal-text">목표: 제한시간 내 가능한 많은 쿠키 클릭!<br>민트초코+5점 / 황금쿠키+10점+3초!</div>
+
 <div class="game-area">
   <div class="playground" id="playground">
-    <div class="goal-text">목표: 제한시간 내 가능한 많은 쿠키 클릭!<br>민트초코+5점 / 황금쿠키+10점+3초!</div>
     <div class="flash" id="flash">콤보! +<span id="flashAmount">1</span></div>
   </div>
 </div>
