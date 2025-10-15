@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>딸기 민트초코 쿠키 클릭게임 v2</title>
+<style>
+:root{
+  --bg:#fff7fb;
+  --panel:#fff;
+  --accent:#ff6f91; 
+  --mint:#32c48d;  
+  --text:#333;
+  --gold:#ffd700;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
+  background: linear-gradient(180deg,#fff7fb 0%, #f7fff7 100%);
+  color:var(--text);
+  display:flex;
+  min-height:100vh;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+.wrap{
+  width:100%;
+  max-width:760px;
+  background:var(--panel);
+  border-radius:14px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+  overflow:hidden;
+}
+header{
+  padding:18px 20px;
+  display:flex;
+  gap:12px;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:1px solid rgba(0,0,0,0.04);
+}
+.title{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  font-weight:700;
+  font-size:18px;
+}
+.title .logo{
+  width:44px;height:44px;border-radius:10px;
+  background:linear-gradient(135deg,var(--accent),#ffd1e0);
+  display:flex;align-items:center;justify-content:center;font-size:22px;
+  box-shadow:0 4px 10px rgba(0,0,0,0.06);
+}
+.controls{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+.stat{
+  font-size:14px;
+}
+button{
+  background:linear-gradient(180deg,#fff,#ffeeff);
+  border:1px solid rgba(0,0,0,0.06);
+  padding:8px 12px;border-radius:10px;font-weight:600;
+  cursor:pointer;
+}
+.game-area{
+  position:relative;
+  height:520px;
+  background:
+    radial-gradient(circle at 10% 20%, rgba(255,111,145,0.06), transparent 6%),
+    radial-gradient(circle at 90% 80%, rgba(50,196,141,0.04), transparent 8%);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+.playground{
+  position:relative;
+  width:92%;
+  height:92%;
+  border-radius:12px;
+}
+.cookie, .mint, .gold{
+  position:absolute;
+  user-select:none;
+  cursor:pointer;
+  transform-origin:center;
+  transition:transform 120ms ease;
+  will-change:transform;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  font-size:46px;
+}
+.cookie:active, .mint:active, .gold:active{ transform: scale(0.9); }
+.cookie.spawn, .mint.spawn, .gold.spawn{
+  animation:pop .25s ease;
+}
+.mint.spawn{ animation:pop .25s ease, spin 2s linear infinite; font-size:52px; }
+.gold.spawn{ animation:pop .25s ease, blink 1.2s infinite alternate; font-size:50px;}
+@keyframes pop{ from{transform:scale(0)} to{transform:scale(1)} }
+@keyframes spin{ from{transform:rotate(0)} to{transform:rotate(360deg)} }
+@keyframes blink{ from{opacity:0.7} to{opacity:1} }
+
+.hud{
+  position:absolute;
+  left:12px;top:12px;
+  background:rgba(255,255,255,0.85);
+  padding:8px 12px;border-radius:8px;
+  box-shadow:0 6px 18px rgba(0,0,0,0.06);
+  font-weight:700;
+}
+.message{
+  position:absolute;right:12px;top:12px;
+  background:rgba(0,0,0,0.06);
+  padding:8px 12px;border-radius:8px;font-weight:600;
+}
+.footer{
+  padding:12px 20px;
+  display:flex;gap:12px;align-items:center;justify-content:space-between;
+  font-size:13px;color:#555;border-top:1px solid rgba(0,0,0,0.04);
+}
+.small{font-size:12px;color:#666}
+.flash{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  background:rgba(255,255,255,0.92);
+  padding:18px 22px;border-radius:10px;font-weight:800;
+  box-shadow:0 12px 40px rgba(0,0,0,0.08);
+  display:none;
+}
+.flash.show{display:block}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="title">
+    <div class="logo">🍪</div>
+    <div>
+      <div>딸기-민트초코 쿠키 클릭게임 v2</div>
+      <div style="font-size:12px;color:#666;margin-top:4px">콤보+보너스 쿠키+효과음까지!</div>
+    </div>
+  </div>
+  <div class="controls">
+    <div class="stat">점수: <span id="score">0</span></div>
+    <div class="stat">시간: <span id="timer">30</span>s</div>
+    <div class="stat">최고: <span id="best">0</span></div>
+    <button id="startBtn">시작</button>
+    <button id="resetBtn">초기화</button>
+  </div>
+</header>
+
+<div class="game-area">
+  <div class="playground" id="playground">
+    <div class="hud">목표: 제한시간 내 가능한 많은 쿠키 클릭!</div>
+    <div class="message small" id="message">민트초코+5점 / 황금쿠키+10점+3초!</div>
+    <div class="flash" id="flash">콤보! +<span id="flashAmount">1</span></div>
+  </div>
+</div>
+
+<div class="footer">
+  <div>설명: 🍪 +1 / 🍫 +5 / ✨황금 +10 +3초 / 콤보점수 ↑</div>
+  <div class="small">파일로 저장 후 브라우저에서 열어 플레이하세요.</div>
+</div>
+</div>
+
+<script>
+(() => {
+const playground = document.getElementById('playground');
+const scoreEl = document.getElementById('score');
+const timerEl = document.getElementById('timer');
+const bestEl = document.getElementById('best');
+const startBtn = document.getElementById('startBtn');
+const resetBtn = document.getElementById('resetBtn');
+const flash = document.getElementById('flash');
+const flashAmount = document.getElementById('flashAmount');
+
+let score = 0;
+let timeLeft = 30;
+let timerId = null;
+let cookieInterval = null;
+let mintInterval = null;
+let goldInterval = null;
+let running = false;
+
+let combo = 0;
+let lastClickTime = 0;
+
+const BEST_KEY = 'cookie_click_best_v2';
+bestEl.textContent = localStorage.getItem(BEST_KEY) || 0;
+
+function rand(min,max){ return Math.random()*(max-min)+min; }
+
+function spawnCookie(){
+  const el = document.createElement('div');
+  el.className = 'cookie spawn';
+  el.textContent = '🍪';
+  placeElementRandom(el);
+  el.addEventListener('click', e=>onCookieClick(e,1));
+  playground.appendChild(el);
+  setTimeout(()=>{ if(el.parentNode) el.remove(); }, 1800);
+}
+
+function spawnMint(){
+  if(Math.random()<0.28){
+    const el = document.createElement('div');
+    el.className = 'mint spawn';
+    el.textContent = '🍫';
+    placeElementRandom(el);
+    el.addEventListener('click', e=>onCookieClick(e,5));
+    playground.appendChild(el);
+    setTimeout(()=>{ if(el.parentNode) el.remove(); }, 2500);
+  }
+}
+
+function spawnGold(){
+  if(Math.random()<0.08){
+    const el = document.createElement('div');
+    el.className = 'gold spawn';
+    el.textContent = '✨';
+    placeElementRandom(el);
+    el.addEventListener('click', e=>onGoldClick(e));
+    playground.appendChild(el);
+    setTimeout(()=>{ if(el.parentNode) el.remove(); }, 3500);
+  }
+}
+
+function placeElementRandom(el){
+  const pad = 12;
+  const area = playground.getBoundingClientRect();
+  const w = Math.min(80, area.width*0.18);
+  const h = Math.min(80, area.height*0.18);
+  const x = rand(pad, area.width - w - pad);
+  const y = rand(pad + 30, area.height - h - pad);
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+}
+
+function onCookieClick(e,pts){
+  if(!running) return;
+  const now = Date.now();
+  combo = (now - lastClickTime < 1000) ? combo+1 : 0;
+  lastClickTime = now;
+
+  let totalPts = pts + Math.floor(combo/3);
+  score += totalPts;
+  flashScore(totalPts);
+  updateScore();
+  e.currentTarget.remove();
+}
+
+function onGoldClick(e){
+  if(!running) return;
+  score += 10;
+  timeLeft += 3;
+  flashScore(10);
+  updateScore();
+  e.currentTarget.remove();
+}
+
+function flashScore(amount){
+  flashAmount.textContent = amount;
+  flash.classList.add('show');
+  setTimeout(()=> flash.classList.remove('show'), 500);
+}
+
+function updateScore(){
+  scoreEl.textContent = score;
+  const best = Number(localStorage.getItem(BEST_KEY) || 0);
+  if(score > best){
+    localStorage.setItem(BEST_KEY, score);
+    bestEl.textContent = score;
+  }
+}
+
+function tick(){
+  timeLeft -= 1;
+  timerEl.textContent = timeLeft;
+  if(timeLeft <= 0) endGame();
+}
+
+function startGame(){
+  if(running) return;
+  running = true;
+  score = 0;
+  timeLeft = 30;
+  combo = 0;
+  scoreEl.textContent = score;
+  timerEl.textContent = timeLeft;
+  startBtn.textContent = '플레이 중...';
+
+  cookieInterval = setInterval(spawnCookie, 650);
+  mintInterval = setInterval(spawnMint, 2200);
+  goldInterval = setInterval(spawnGold, 5500);
+  timerId = setInterval(tick, 1000);
+}
+
+function endGame(){
+  running = false;
+  startBtn.textContent = '시작';
+  clearInterval(timerId); timerId = null;
+  clearInterval(cookieInterval); cookieInterval = null;
+  clearInterval(mintInterval); mintInterval = null;
+  clearInterval(goldInterval); goldInterval = null;
+
+  [...playground.querySelectorAll('.cookie, .mint, .gold')].forEach(n=>n.remove());
+  const best = Number(localStorage.getItem(BEST_KEY) || 0);
+  alert(`시간 종료! 점수: ${score}. 최고점: ${best}.`);
+}
+
+function resetBest(){
+  localStorage.removeItem(BEST_KEY);
+  bestEl.textContent = '0';
+}
+
+startBtn.addEventListener('click', startGame);
+resetBtn.addEventListener('click', ()=>{ if(confirm('기록을 초기화?')) resetBest(); });
+window.addEventListener('keydown', (e)=>{ if(e.code==='Space'){ e.preventDefault(); startGame(); } });
+})();
+</script>
+</body>
+</html>
