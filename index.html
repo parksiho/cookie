@@ -219,12 +219,15 @@ button{
   
   .controls {
     justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 8px;
+    flex-wrap: nowrap;
+    gap: 6px;
+    overflow-x: auto;
   }
   
   .stat {
     font-size: 13px;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
   
   button {
@@ -282,19 +285,24 @@ button{
   }
   
   .controls {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .controls > div {
-    display: flex;
+    flex-direction: row;
+    align-items: center;
     justify-content: space-between;
-    margin-bottom: 4px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 4px;
   }
   
   .controls button {
-    flex: 1;
-    margin: 0 2px;
+    flex-shrink: 0;
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+  
+  .stat {
+    font-size: 11px;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
   
   .game-area {
